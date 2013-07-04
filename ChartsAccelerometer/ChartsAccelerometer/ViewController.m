@@ -109,7 +109,9 @@
 }
 
 -(SChartSeries *)sChart:(ShinobiChart *)chart seriesAtIndex:(int)index {
-    return [[SChartLineSeries alloc] init];
+    SChartLineSeries* lineSeries = [[SChartLineSeries alloc] init];
+    lineSeries.style.showFill = YES;
+    return lineSeries;
 }
 
 - (id<SChartData>)sChart:(ShinobiChart *)chart dataPointAtIndex:(int)dataIndex forSeriesAtIndex:(int)seriesIndex {
