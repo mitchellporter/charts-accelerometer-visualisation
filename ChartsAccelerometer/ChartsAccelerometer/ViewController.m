@@ -17,7 +17,7 @@
 @implementation ViewController
 {
     ShinobiChart* _chart;
-    NSMutableArray* _data;
+    NSMutableArray* _data[3];
     CMMotionManager* _motion;
     double _currentX;
 }
@@ -25,21 +25,25 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
+    
+    // add a chart with a margin
     _chart = [[ShinobiChart alloc] initWithFrame:CGRectInset(self.view.bounds, 40.0f, 40.0f)];
-    
-    _currentX=0;
-    
     [self.view addSubview:_chart];
+    
     _chart.datasource = self;
     
+    // add the axes
     _chart.yAxis = [self createAxis];
     _chart.xAxis = [self createAxis];
+    _chart.yAxis.defaultRange = [[SChartNumberRange alloc] initWithMinimum:@-2 andMaximum:@2];
+
+    // initialise the chart data
+    _currentX=0;
+    for(int i=0;i<3;i++) {
+        _data[i] = [NSMutableArray new];
+    }
     
-    _chart.yAxis.defaultRange = [[SChartNumberRange alloc] initWithMinimum:@-1 andMaximum:@1];
-    
-    _data = [NSMutableArray new];
-    
+    // start reaing the accelerometer
     _motion = [CMMotionManager new];
     [_motion startAccelerometerUpdatesToQueue:[NSOperationQueue new]
                                   withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
@@ -51,55 +55,66 @@
 }
 
 - (void)addData:(CMAccelerometerData*) accelerometerData {
-    // create a new datapoint
-    SChartDataPoint* pt = [SChartDataPoint new];
-    pt.xValue = @(_currentX);
-    pt.yValue = @(accelerometerData.acceleration.x);
+    
+    for (int i=0; i<3; i++) {
+        
+        // create a new datapoint
+        SChartDataPoint* pt = [SChartDataPoint new];
+        pt.xValue = @(_currentX);
+        
+        if (i==0) {
+            pt.yValue = @(accelerometerData.acceleration.x);
+        } else if (i==1) {
+            pt.yValue = @(accelerometerData.acceleration.y);
+        } else {
+            pt.yValue = @(accelerometerData.acceleration.z);
+        }
+        
+        // add to the series
+        [_data[i] addObject:pt];
+        [_chart appendNumberOfDataPoints:1 toEndOfSeriesAtIndex:i];
+        
+        if (_data[i].count > 500) {
+            // when we hit 500, remove the first point in the series
+            [_data[i] removeObjectsInRange:NSMakeRange(0, 1)];
+            [_chart removeNumberOfDataPoints:1 fromStartOfSeriesAtIndex:i];
+        }
+    }
     _currentX+=1.0;
     
-    // add to the series
-    [_data addObject:pt];
-    [_chart appendNumberOfDataPoints:1 toEndOfSeriesAtIndex:0];
     
-    if (_data.count > 1000) {
-        // when we hit 1000, remove the first point in the series
-        [_data removeObjectsInRange:NSMakeRange(0, 1)];
-        [_chart removeNumberOfDataPoints:1 fromStartOfSeriesAtIndex:0];
-    }
     [_chart redrawChart];
     
 }
+
+- (NSUInteger)supportedInterfaceOrientations {
+    return UIInterfaceOrientationPortrait;
+}
+
+#pragma mark - SChartDatasource implementation methods
 
 - (SChartAxis*) createAxis {
     SChartNumberAxis* axis = [[SChartNumberAxis alloc] init];
     return axis;
 }
 
-
-
-
 - (int)numberOfSeriesInSChart:(ShinobiChart*)chart
 {
-    return 1;
+    return 3;
 }
 
 
 -(int)sChart:(ShinobiChart *)chart numberOfDataPointsForSeriesAtIndex:(int)seriesIndex {
-    return _data.count;
+    return _data[seriesIndex].count;
 }
 
-// Returns the series at the specified index for a given chart
 -(SChartSeries *)sChart:(ShinobiChart *)chart seriesAtIndex:(int)index {
-    
-    // In our example all series are line series.
-    SChartLineSeries *lineSeries = [[SChartLineSeries alloc] init];
-    
-    return lineSeries;
+    return [[SChartLineSeries alloc] init];
 }
 
 - (id<SChartData>)sChart:(ShinobiChart *)chart dataPointAtIndex:(int)dataIndex forSeriesAtIndex:(int)seriesIndex {
     
-    return _data[dataIndex];
+    return _data[seriesIndex][dataIndex];
 }
 
 
