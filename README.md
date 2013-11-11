@@ -4,8 +4,6 @@ This is a demo project that demonstrates how to plot the accelerometer readings 
 
 ![Screenshot](screenshot.png)
 
-**NOTE:** This code uses an Early Access version of Shinobi Charts, so currently the API methods used in this project are not publicly available. 
-
 This project makes use of a couple of new methods that have been added to the chart:
 
 ```objc
