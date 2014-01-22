@@ -2,7 +2,7 @@
 
 This is a demo project that demonstrates how to plot the accelerometer readings from the CoreMotion framework onto a ShinobiChart.
 
-![Screenshot](screenshot.png)
+![Screenshot](screenshot.png?raw=true)
 
 This project makes use of a couple of new methods that have been added to the chart:
 
